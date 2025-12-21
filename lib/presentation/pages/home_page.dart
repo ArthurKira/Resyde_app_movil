@@ -4,6 +4,7 @@ import '../../domain/entities/module.dart';
 import '../providers/auth_provider.dart';
 import 'login_page.dart';
 import 'residencias_page.dart';
+import 'asistencia_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -55,6 +56,14 @@ class HomePage extends StatelessWidget {
         description: '',
         icon: 'receipt',
         route: '/recibos',
+      ),
+
+      const Module(
+        id: '2',
+        name: 'Asistencia',
+        description: '',
+        icon: 'schedule',
+        route: '/asistencia',
       ),
       // Aquí se pueden agregar más módulos en el futuro
     ];
@@ -189,6 +198,12 @@ class _ModuleCard extends StatelessWidget {
                 builder: (context) => const ResidenciasPage(),
               ),
             );
+          } else if (module.route == '/asistencia') {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const AsistenciaPage(),
+              ),
+            );
           } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -261,6 +276,8 @@ class _ModuleCard extends StatelessWidget {
         return Icons.assessment;
       case 'user':
         return Icons.person;
+      case 'schedule':
+        return Icons.access_time;
       default:
         return Icons.folder;
     }

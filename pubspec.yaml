@@ -46,6 +46,12 @@ dependencies:
 
   # Image picker para tomar o seleccionar imágenes
   image_picker: ^1.0.7
+  
+  # Geolocator para obtener coordenadas GPS
+  geolocator: ^10.1.0
+  
+  # Permission handler para solicitar permisos de ubicación
+  permission_handler: ^11.0.0
 
 dev_dependencies:
   flutter_test:
