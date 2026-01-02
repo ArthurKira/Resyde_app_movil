@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../entities/estado_asistencia.dart';
 import '../entities/registro_asistencia.dart';
 import '../entities/historial_asistencia.dart';
@@ -9,11 +10,13 @@ abstract class AsistenciaRepository {
     String token,
     double latitud,
     double longitud,
+    File foto,
   );
   Future<Result<RegistroAsistencia>> marcarSalida(
     String token,
     double latitud,
     double longitud,
+    File foto,
   );
   Future<Result<HistorialAsistencia>> getHistorialAsistencia(
     String token, {

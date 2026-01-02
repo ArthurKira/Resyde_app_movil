@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../../core/constants/api_constants.dart';
 import '../models/estado_asistencia_response.dart';
@@ -12,11 +13,13 @@ abstract class AsistenciaRemoteDataSource {
     String token,
     double latitud,
     double longitud,
+    File foto,
   );
   Future<MarcarSalidaResponse> marcarSalida(
     String token,
     double latitud,
     double longitud,
+    File foto,
   );
   Future<HistorialAsistenciaResponse> getHistorialAsistencia(
     String token, {
@@ -79,25 +82,42 @@ class AsistenciaRemoteDataSourceImpl implements AsistenciaRemoteDataSource {
     String token,
     double latitud,
     double longitud,
+    File foto,
   ) async {
     try {
-      final response = await client.post(
+      // Crear multipart request
+      var request = http.MultipartRequest(
+        'POST',
         Uri.parse(ApiConstants.asistenciaMarcarEntradaEndpoint),
-        headers: {
-          'Content-Type': ApiConstants.contentType,
-          'Accept': ApiConstants.accept,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'latitud': latitud,
-          'longitud': longitud,
-        }),
-      ).timeout(
+      );
+
+      // Agregar headers
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = ApiConstants.accept;
+
+      // Agregar campos
+      request.fields['latitud'] = latitud.toString();
+      request.fields['longitud'] = longitud.toString();
+
+      // Agregar archivo
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'foto',
+          foto.path,
+          filename: 'foto_entrada.jpg',
+        ),
+      );
+
+      // Enviar request con timeout
+      var streamedResponse = await request.send().timeout(
         const Duration(seconds: 30),
         onTimeout: () {
           throw Exception('Tiempo de espera agotado');
         },
       );
+
+      // Convertir streamed response a response normal
+      var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode != 201 && response.statusCode != 200) {
         String errorMessage = 'Error al marcar entrada';
@@ -129,25 +149,42 @@ class AsistenciaRemoteDataSourceImpl implements AsistenciaRemoteDataSource {
     String token,
     double latitud,
     double longitud,
+    File foto,
   ) async {
     try {
-      final response = await client.post(
+      // Crear multipart request
+      var request = http.MultipartRequest(
+        'POST',
         Uri.parse(ApiConstants.asistenciaMarcarSalidaEndpoint),
-        headers: {
-          'Content-Type': ApiConstants.contentType,
-          'Accept': ApiConstants.accept,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'latitud': latitud,
-          'longitud': longitud,
-        }),
-      ).timeout(
+      );
+
+      // Agregar headers
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = ApiConstants.accept;
+
+      // Agregar campos
+      request.fields['latitud'] = latitud.toString();
+      request.fields['longitud'] = longitud.toString();
+
+      // Agregar archivo
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'foto',
+          foto.path,
+          filename: 'foto_salida.jpg',
+        ),
+      );
+
+      // Enviar request con timeout
+      var streamedResponse = await request.send().timeout(
         const Duration(seconds: 30),
         onTimeout: () {
           throw Exception('Tiempo de espera agotado');
         },
       );
+
+      // Convertir streamed response a response normal
+      var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode != 200) {
         String errorMessage = 'Error al marcar salida';

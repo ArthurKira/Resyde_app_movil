@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../core/errors/failures.dart';
 import '../../core/utils/result.dart';
 import '../../domain/entities/estado_asistencia.dart';
@@ -38,12 +39,14 @@ class AsistenciaRepositoryImpl implements AsistenciaRepository {
     String token,
     double latitud,
     double longitud,
+    File foto,
   ) async {
     try {
       final response = await remoteDataSource.marcarEntrada(
         token,
         latitud,
         longitud,
+        foto,
       );
       return Success(response.toRegistroAsistencia());
     } on Exception catch (e) {
@@ -68,12 +71,14 @@ class AsistenciaRepositoryImpl implements AsistenciaRepository {
     String token,
     double latitud,
     double longitud,
+    File foto,
   ) async {
     try {
       final response = await remoteDataSource.marcarSalida(
         token,
         latitud,
         longitud,
+        foto,
       );
       return Success(response.toRegistroAsistencia());
     } on Exception catch (e) {

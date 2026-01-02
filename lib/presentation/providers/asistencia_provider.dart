@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/errors/failures.dart';
 import '../../core/utils/result.dart';
 import '../../domain/entities/estado_asistencia.dart';
@@ -30,6 +32,7 @@ class AsistenciaProvider with ChangeNotifier {
   bool _isMarcandoEntrada = false;
   bool _isMarcandoSalida = false;
   bool _isObteniendoUbicacion = false;
+  bool _isTomandoFoto = false;
   
   EstadoAsistencia? _estadoAsistencia;
   HistorialAsistencia? _historialAsistencia;
@@ -47,6 +50,7 @@ class AsistenciaProvider with ChangeNotifier {
   bool get isMarcandoEntrada => _isMarcandoEntrada;
   bool get isMarcandoSalida => _isMarcandoSalida;
   bool get isObteniendoUbicacion => _isObteniendoUbicacion;
+  bool get isTomandoFoto => _isTomandoFoto;
   EstadoAsistencia? get estadoAsistencia => _estadoAsistencia;
   HistorialAsistencia? get historialAsistencia => _historialAsistencia;
   Failure? get error => _error;
@@ -128,13 +132,43 @@ class AsistenciaProvider with ChangeNotifier {
     }
   }
 
+  // Tomar foto con la cámara
+  Future<Result<File>> tomarFoto() async {
+    _isTomandoFoto = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85, // Calidad de imagen (0-100)
+      );
+
+      _isTomandoFoto = false;
+
+      if (image == null) {
+        // Usuario canceló la cámara
+        return const Error(NetworkFailure('No se seleccionó imagen. La foto es obligatoria.'));
+      }
+
+      final file = File(image.path);
+      notifyListeners();
+      return Success(file);
+    } catch (e) {
+      _isTomandoFoto = false;
+      notifyListeners();
+      return Error(NetworkFailure('Error al tomar foto: ${e.toString()}'));
+    }
+  }
+
   // Marcar entrada
   Future<Result<RegistroAsistencia>> marcarEntrada(String token) async {
     _isMarcandoEntrada = true;
     _error = null;
     notifyListeners();
 
-    // Obtener ubicación primero
+    // 1. Obtener ubicación primero
     final ubicacionResult = await obtenerUbicacion();
     if (ubicacionResult is Error<Position>) {
       _isMarcandoEntrada = false;
@@ -145,10 +179,23 @@ class AsistenciaProvider with ChangeNotifier {
 
     final position = (ubicacionResult as Success<Position>).data;
 
+    // 2. Tomar foto
+    final fotoResult = await tomarFoto();
+    if (fotoResult is Error<File>) {
+      _isMarcandoEntrada = false;
+      _error = fotoResult.failure;
+      notifyListeners();
+      return fotoResult as Result<RegistroAsistencia>;
+    }
+
+    final foto = (fotoResult as Success<File>).data;
+
+    // 3. Marcar entrada con foto
     final result = await marcarEntradaUseCase(
       token,
       position.latitude,
       position.longitude,
+      foto,
     );
 
     _isMarcandoEntrada = false;
@@ -171,7 +218,7 @@ class AsistenciaProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    // Obtener ubicación primero
+    // 1. Obtener ubicación primero
     final ubicacionResult = await obtenerUbicacion();
     if (ubicacionResult is Error<Position>) {
       _isMarcandoSalida = false;
@@ -182,10 +229,23 @@ class AsistenciaProvider with ChangeNotifier {
 
     final position = (ubicacionResult as Success<Position>).data;
 
+    // 2. Tomar foto
+    final fotoResult = await tomarFoto();
+    if (fotoResult is Error<File>) {
+      _isMarcandoSalida = false;
+      _error = fotoResult.failure;
+      notifyListeners();
+      return fotoResult as Result<RegistroAsistencia>;
+    }
+
+    final foto = (fotoResult as Success<File>).data;
+
+    // 3. Marcar salida con foto
     final result = await marcarSalidaUseCase(
       token,
       position.latitude,
       position.longitude,
+      foto,
     );
 
     _isMarcandoSalida = false;

@@ -5,24 +5,24 @@ class ApiConstants {
   
   // Función para obtener la URL base según la plataforma
   static String get baseUrl {
-    // Para producción, descomenta la siguiente línea y comenta el resto:
-    // return 'https://apiresyde.uclub.net.pe/api';
+    // Producción
+    return 'https://apiresyde.uclub.net.pe/api';
     
-    // Desarrollo local - detecta la plataforma automáticamente
-    if (Platform.isAndroid) {
-      // Android Emulador: 10.0.2.2 mapea al localhost de la Mac
-      // Dispositivo físico Android: usa la IP de tu Mac (ej: 192.168.100.61)
-      return 'http://10.0.2.2:8000/api'; // Android Emulador
-      // return 'http://192.168.100.61:8000/api'; // Android dispositivo físico
-    } else if (Platform.isIOS) {
-      // iOS Emulador: puede usar 127.0.0.1 directamente
-      // Dispositivo físico iOS: usa la IP de tu Mac (ej: 192.168.100.61)
-      return 'http://127.0.0.1:8000/api'; // iOS Emulador
-      // return 'http://192.168.100.61:8000/api'; // iOS dispositivo físico
-    } else {
-      // Para web u otras plataformas
-      return 'http://127.0.0.1:8000/api';
-    }
+    // Desarrollo local - detecta la plataforma automáticamente (comentado para producción)
+    // if (Platform.isAndroid) {
+    //   // Android Emulador: 10.0.2.2 mapea al localhost de la Mac
+    //   // Dispositivo físico Android: usa la IP de tu Mac (ej: 192.168.100.61)
+    //   return 'http://10.0.2.2:8000/api'; // Android Emulador
+    //   // return 'http://192.168.100.61:8000/api'; // Android dispositivo físico
+    // } else if (Platform.isIOS) {
+    //   // iOS Emulador: puede usar 127.0.0.1 directamente
+    //   // Dispositivo físico iOS: usa la IP de tu Mac (ej: 192.168.100.61)
+    //   return 'http://127.0.0.1:8000/api'; // iOS Emulador
+    //   // return 'http://192.168.100.61:8000/api'; // iOS dispositivo físico
+    // } else {
+    //   // Para web u otras plataformas
+    //   return 'http://127.0.0.1:8000/api';
+    // }
   }
   
   static String get loginEndpoint => '$baseUrl/auth/login';

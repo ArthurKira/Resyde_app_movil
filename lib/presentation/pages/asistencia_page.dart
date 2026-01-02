@@ -277,6 +277,7 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
                   Icons.login,
                   Colors.green,
                   provider.isMarcandoEntrada || provider.isObteniendoUbicacion,
+                  provider.isTomandoFoto,
                   () => _marcarEntrada(context, provider),
                 ),
               if (estado.puedeMarcarSalida)
@@ -286,6 +287,7 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
                   Icons.logout,
                   Colors.orange,
                   provider.isMarcandoSalida || provider.isObteniendoUbicacion,
+                  provider.isTomandoFoto,
                   () => _marcarSalida(context, provider),
                 ),
             ] else if (!estado.tieneHorario) ...[
@@ -399,14 +401,23 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
     IconData icon,
     Color color,
     bool isLoading,
+    bool isTomandoFoto,
     VoidCallback onPressed,
   ) {
+    final isDisabled = isLoading || isTomandoFoto;
+    String buttonLabel = label;
+    if (isTomandoFoto) {
+      buttonLabel = 'Tomando foto...';
+    } else if (isLoading) {
+      buttonLabel = 'Procesando...';
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: isLoading ? null : onPressed,
-        icon: isLoading
+        onPressed: isDisabled ? null : onPressed,
+        icon: isDisabled
             ? SizedBox(
                 width: 20,
                 height: 20,
@@ -416,7 +427,7 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
                 ),
               )
             : Icon(icon),
-        label: Text(label),
+        label: Text(buttonLabel),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,

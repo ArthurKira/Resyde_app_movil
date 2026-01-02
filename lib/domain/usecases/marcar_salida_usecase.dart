@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../core/utils/result.dart';
 import '../entities/registro_asistencia.dart';
 import '../repositories/asistencia_repository.dart';
@@ -11,8 +12,9 @@ class MarcarSalidaUseCase {
     String token,
     double latitud,
     double longitud,
+    File foto,
   ) async {
-    return await repository.marcarSalida(token, latitud, longitud);
+    return await repository.marcarSalida(token, latitud, longitud, foto);
   }
 }
 
