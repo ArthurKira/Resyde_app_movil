@@ -28,6 +28,7 @@ class LoginResponse {
               email: userData['email'] as String?,
               name: userData['name'] as String?,
               token: token,
+              perfil: userData['perfil'] as String?,
             )
           : null,
       message: json['message'] as String?,
@@ -43,6 +44,7 @@ class LoginResponse {
       email: user?.email,
       name: user?.name,
       token: token ?? user?.token,
+      perfil: user?.perfil,
     );
   }
 }

@@ -48,25 +48,45 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lista de módulos disponibles
-    final modules = [
-      const Module(
-        id: '1',
-        name: 'Recibos',
-        description: '',
-        icon: 'receipt',
-        route: '/recibos',
-      ),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final user = authProvider.currentUser;
+        final perfil = user?.perfil;
 
-      const Module(
-        id: '2',
-        name: 'Asistencia',
-        description: '',
-        icon: 'schedule',
-        route: '/asistencia',
-      ),
-      // Aquí se pueden agregar más módulos en el futuro
-    ];
+        // Lista de módulos disponibles filtrados por perfil
+        final modules = <Module>[];
+
+        // Módulo Recibos - solo visible para Supervisores
+        if (perfil == 'Supervisor') {
+          modules.add(
+            const Module(
+              id: '1',
+              name: 'Recibos',
+              description: '',
+              icon: 'receipt',
+              route: '/recibos',
+            ),
+          );
+        }
+
+        // Módulo Asistencia - visible para todos los perfiles
+        modules.add(
+          const Module(
+            id: '2',
+            name: 'Asistencia',
+            description: '',
+            icon: 'schedule',
+            route: '/asistencia',
+          ),
+        );
+        // Aquí se pueden agregar más módulos en el futuro
+
+        return _buildScaffold(context, modules);
+      },
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, List<Module> modules) {
 
     return Scaffold(
       appBar: AppBar(
@@ -157,18 +177,38 @@ class HomePage extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.85,
-                  ),
-                  itemCount: modules.length,
-                  itemBuilder: (context, index) {
-                    return _ModuleCard(module: modules[index]);
-                  },
-                ),
+                child: modules.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.lock_outline,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No tienes módulos disponibles',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.85,
+                        ),
+                        itemCount: modules.length,
+                        itemBuilder: (context, index) {
+                          return _ModuleCard(module: modules[index]);
+                        },
+                      ),
               ),
             ),
           ],
