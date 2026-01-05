@@ -174,7 +174,7 @@ class AsistenciaProvider with ChangeNotifier {
       _isMarcandoEntrada = false;
       _error = ubicacionResult.failure;
       notifyListeners();
-      return ubicacionResult as Result<RegistroAsistencia>;
+      return Error(ubicacionResult.failure);
     }
 
     final position = (ubicacionResult as Success<Position>).data;
@@ -185,7 +185,7 @@ class AsistenciaProvider with ChangeNotifier {
       _isMarcandoEntrada = false;
       _error = fotoResult.failure;
       notifyListeners();
-      return fotoResult as Result<RegistroAsistencia>;
+      return Error(fotoResult.failure);
     }
 
     final foto = (fotoResult as Success<File>).data;
@@ -224,7 +224,7 @@ class AsistenciaProvider with ChangeNotifier {
       _isMarcandoSalida = false;
       _error = ubicacionResult.failure;
       notifyListeners();
-      return ubicacionResult as Result<RegistroAsistencia>;
+      return Error(ubicacionResult.failure);
     }
 
     final position = (ubicacionResult as Success<Position>).data;
@@ -235,7 +235,7 @@ class AsistenciaProvider with ChangeNotifier {
       _isMarcandoSalida = false;
       _error = fotoResult.failure;
       notifyListeners();
-      return fotoResult as Result<RegistroAsistencia>;
+      return Error(fotoResult.failure);
     }
 
     final foto = (fotoResult as Success<File>).data;

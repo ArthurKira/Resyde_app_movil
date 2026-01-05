@@ -59,27 +59,27 @@ class HomePage extends StatelessWidget {
         // Módulo Recibos - solo visible para Supervisores
         if (perfil == 'Supervisor') {
           modules.add(
-            const Module(
-              id: '1',
-              name: 'Recibos',
-              description: '',
-              icon: 'receipt',
-              route: '/recibos',
-            ),
+      const Module(
+        id: '1',
+        name: 'Recibos',
+        description: '',
+        icon: 'receipt',
+        route: '/recibos',
+      ),
           );
         }
 
         // Módulo Asistencia - visible para todos los perfiles
         modules.add(
-          const Module(
-            id: '2',
-            name: 'Asistencia',
-            description: '',
+      const Module(
+        id: '2',
+        name: 'Asistencia',
+        description: '',
             icon: 'schedule',
             route: '/asistencia',
-          ),
+      ),
         );
-        // Aquí se pueden agregar más módulos en el futuro
+      // Aquí se pueden agregar más módulos en el futuro
 
         return _buildScaffold(context, modules);
       },
@@ -198,17 +198,17 @@ class HomePage extends StatelessWidget {
                         ),
                       )
                     : GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.85,
-                        ),
-                        itemCount: modules.length,
-                        itemBuilder: (context, index) {
-                          return _ModuleCard(module: modules[index]);
-                        },
-                      ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                  ),
+                  itemCount: modules.length,
+                  itemBuilder: (context, index) {
+                    return _ModuleCard(module: modules[index]);
+                  },
+                ),
               ),
             ),
           ],

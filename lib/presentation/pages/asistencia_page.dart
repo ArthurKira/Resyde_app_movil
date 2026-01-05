@@ -4,6 +4,7 @@ import '../providers/asistencia_provider.dart';
 import '../providers/auth_provider.dart';
 import '../../domain/entities/estado_asistencia.dart';
 import '../../domain/entities/registro_asistencia.dart';
+import '../../domain/entities/horario_turno.dart';
 import '../../core/utils/result.dart';
 
 class AsistenciaPage extends StatefulWidget {
@@ -231,19 +232,31 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
             ),
             const SizedBox(height: 24),
             
-            // Mensaje de estado
-            if (estado.mensaje != null)
+            // Mensaje de estado del backend
+            if (estado.mensaje != null && estado.mensaje!.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getColorEstado(estado).withValues(alpha: 0.1),
+                  color: estado.puedeMarcarSalida
+                      ? Colors.blue[50]
+                      : _getColorEstado(estado).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: estado.puedeMarcarSalida
+                        ? Colors.blue[200]!
+                        : _getColorEstado(estado).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(
-                      _getIconEstado(estado),
-                      color: _getColorEstado(estado),
+                      estado.puedeMarcarSalida
+                          ? Icons.pending_actions
+                          : _getIconEstado(estado),
+                      color: estado.puedeMarcarSalida
+                          ? Colors.blue[700]
+                          : _getColorEstado(estado),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -251,8 +264,11 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
                       child: Text(
                         estado.mensaje!,
                         style: TextStyle(
-                          color: _getColorEstado(estado),
+                          color: estado.puedeMarcarSalida
+                              ? Colors.blue[900]
+                              : _getColorEstado(estado),
                           fontWeight: FontWeight.w500,
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -265,31 +281,72 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
             // Información de registro actual
             if (estado.registro != null) ...[
               _buildRegistroInfo(context, estado.registro!),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              
+              // Advertencia para turnos largos (más de 40 horas)
+              if (estado.registro!.horaSalida == null)
+                _buildAdvertenciaTurnoLargo(context, estado.registro!),
+              
+              const SizedBox(height: 8),
             ],
             
-            // Botones de acción
-            if (estado.puedeMarcarEntrada || estado.puedeMarcarSalida) ...[
-              if (estado.puedeMarcarEntrada)
-                _buildActionButton(
-                  context,
-                  'Marcar Entrada',
-                  Icons.login,
-                  Colors.green,
-                  provider.isMarcandoEntrada || provider.isObteniendoUbicacion,
-                  provider.isTomandoFoto,
-                  () => _marcarEntrada(context, provider),
+            // Si no hay registro activo pero hay horario de hoy, mostrarlo
+            if (estado.registro == null && estado.horarioHoy != null && estado.puedeMarcarEntrada) ...[
+              _buildHorarioDisponible(context, estado.horarioHoy!),
+              const SizedBox(height: 16),
+            ],
+            
+            // Botones de acción - PRIORIDAD: primero salida, luego entrada
+            // Si hay un turno pendiente de cerrar, mostrar solo ese
+            if (estado.puedeMarcarSalida && estado.registro != null && estado.registro!.horaSalida == null) ...[
+              _buildActionButton(
+                context,
+                'Marcar Salida',
+                Icons.logout,
+                Colors.orange,
+                provider.isMarcandoSalida || provider.isObteniendoUbicacion,
+                provider.isTomandoFoto,
+                () => _marcarSalida(context, provider),
+              ),
+              // Mostrar que hay un nuevo turno disponible después de cerrar este
+              if (estado.puedeMarcarEntrada) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green[200]!, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18, color: Colors.green[700]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Después de marcar salida, podrás iniciar tu siguiente turno',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              if (estado.puedeMarcarSalida)
-                _buildActionButton(
-                  context,
-                  'Marcar Salida',
-                  Icons.logout,
-                  Colors.orange,
-                  provider.isMarcandoSalida || provider.isObteniendoUbicacion,
-                  provider.isTomandoFoto,
-                  () => _marcarSalida(context, provider),
-                ),
+              ],
+            ] else if (estado.puedeMarcarEntrada) ...[
+              // Solo entrada si no hay turno pendiente
+              _buildActionButton(
+                context,
+                'Marcar Entrada',
+                Icons.login,
+                Colors.green,
+                provider.isMarcandoEntrada || provider.isObteniendoUbicacion,
+                provider.isTomandoFoto,
+                () => _marcarEntrada(context, provider),
+              ),
             ] else if (!estado.tieneHorario) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -340,40 +397,355 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
   }
 
   Widget _buildRegistroInfo(BuildContext context, RegistroAsistencia registro) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Registro del Día',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+    final provider = context.read<AsistenciaProvider>();
+    final estado = provider.estadoAsistencia;
+    final horarioRegistro = estado?.horarioRegistro;
+    final esTurnoNocturno = horarioRegistro?.esTurnoNocturno ?? _esTurnoNocturno(registro);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: esTurnoNocturno ? Colors.indigo[50] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: esTurnoNocturno ? Colors.indigo[200]! : Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Título del card
+          Row(
+            children: [
+              if (esTurnoNocturno) ...[
+                Icon(Icons.nightlight_round, color: Colors.indigo[700], size: 20),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  esTurnoNocturno ? 'Turno Nocturno Activo' : 'Registro del Día',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: esTurnoNocturno ? Colors.indigo[900] : null,
+                      ),
+                ),
               ),
-        ),
-        const SizedBox(height: 12),
-        _buildInfoRow(
-          Icons.login,
-          'Entrada',
-          '${registro.fechaEntrada} ${registro.horaEntrada}',
-          Colors.green,
-        ),
-        if (registro.horaSalida != null) ...[
+            ],
+          ),
+          
+          // Horario programado (si existe)
+          if (horarioRegistro != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!, width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Horario Programado',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Entrada: ${_formatearFechaHora(horarioRegistro.fechaEntrada, horarioRegistro.horaEntrada)}',
+                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Salida: ${_formatearFechaHora(horarioRegistro.fechaSalida, horarioRegistro.horaSalida)}',
+                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+          
+          const SizedBox(height: 12),
+          
+          // Registro real
+          Text(
+            'Tu Registro',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
           const SizedBox(height: 8),
           _buildInfoRow(
-            Icons.logout,
-            'Salida',
-            '${registro.fechaSalida ?? registro.fechaEntrada} ${registro.horaSalida}',
-            Colors.orange,
+            Icons.login,
+            'Entrada',
+            '${_formatearFecha(registro.fechaEntrada)} ${registro.horaEntrada}',
+            Colors.green,
+          ),
+          if (registro.horaSalida != null) ...[
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              Icons.logout,
+              'Salida',
+              '${_formatearFecha(registro.fechaSalida ?? registro.fechaEntrada)} ${registro.horaSalida}',
+              Colors.orange,
+            ),
+          ],
+          const SizedBox(height: 8),
+          _buildInfoRow(
+            Icons.info_outline,
+            'Estado',
+            registro.estado,
+            _getColorEstado2(registro.estado),
           ),
         ],
-        const SizedBox(height: 8),
-        _buildInfoRow(
-          Icons.info_outline,
-          'Estado',
-          registro.estado,
-          registro.estado == 'Presente' ? Colors.green : Colors.orange,
-        ),
-      ],
+      ),
     );
+  }
+
+  String _formatearFechaHora(String fecha, String hora) {
+    try {
+      final fechaParsed = DateTime.parse(fecha);
+      final diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      final diaSemana = diasSemana[fechaParsed.weekday - 1];
+      final dia = fechaParsed.day.toString().padLeft(2, '0');
+      return '$diaSemana $dia a las $hora';
+    } catch (e) {
+      return '$fecha $hora';
+    }
+  }
+
+  String _formatearFecha(String fecha) {
+    try {
+      final fechaParsed = DateTime.parse(fecha);
+      final diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      final diaSemana = diasSemana[fechaParsed.weekday - 1];
+      final dia = fechaParsed.day.toString().padLeft(2, '0');
+      final mes = fechaParsed.month.toString().padLeft(2, '0');
+      return '$diaSemana $dia/$mes';
+    } catch (e) {
+      return fecha;
+    }
+  }
+
+  Color _getColorEstado2(String estado) {
+    switch (estado.toLowerCase()) {
+      case 'presente':
+        return Colors.green;
+      case 'tardanza':
+        return Colors.orange;
+      case 'falta':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  bool _esTurnoNocturno(RegistroAsistencia registro) {
+    try {
+      // Si tiene salida, no es un turno activo
+      if (registro.horaSalida != null) return false;
+      
+      final fechaEntrada = DateTime.parse(registro.fechaEntrada);
+      final fechaHoy = DateTime.now();
+      
+      // Si la entrada fue en un día diferente al actual, es turno nocturno
+      return fechaEntrada.year != fechaHoy.year ||
+             fechaEntrada.month != fechaHoy.month ||
+             fechaEntrada.day != fechaHoy.day;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Widget _buildAdvertenciaTurnoLargo(BuildContext context, RegistroAsistencia registro) {
+    try {
+      final fechaEntrada = DateTime.parse('${registro.fechaEntrada} ${registro.horaEntrada}');
+      final ahora = DateTime.now();
+      final diferencia = ahora.difference(fechaEntrada);
+      
+      // Mostrar advertencia si han pasado más de 40 horas
+      if (diferencia.inHours >= 40) {
+        final horasRestantes = 48 - diferencia.inHours;
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.amber[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.amber[300]!, width: 1),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.amber[700], size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  horasRestantes > 0
+                      ? '⚠️ Tu entrada fue hace ${diferencia.inHours} horas. Marca tu salida pronto (límite: 48h, quedan ${horasRestantes}h)'
+                      : '⚠️ Han pasado más de 48 horas desde tu entrada. Contacta a tu supervisor.',
+                  style: TextStyle(
+                    color: Colors.amber[900],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // Si hay error al parsear fechas, no mostrar advertencia
+    }
+    
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildHorarioDisponible(BuildContext context, HorarioTurno horario) {
+    final esTurnoNocturno = horario.esTurnoNocturno;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: esTurnoNocturno ? Colors.indigo[50] : Colors.green[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: esTurnoNocturno ? Colors.indigo[200]! : Colors.green[200]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                esTurnoNocturno ? Icons.nightlight_round : Icons.wb_sunny_outlined,
+                color: esTurnoNocturno ? Colors.indigo[700] : Colors.green[700],
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  esTurnoNocturno ? 'Turno Nocturno Disponible' : 'Turno Disponible',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: esTurnoNocturno ? Colors.indigo[900] : Colors.green[900],
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Horario Programado',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.login, size: 16, color: Colors.green[600]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Entrada: ${_formatearFechaHora(horario.fechaEntrada, horario.horaEntrada)}',
+                        style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.logout, size: 16, color: Colors.orange[600]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Salida: ${_formatearFechaHora(horario.fechaSalida, horario.horaSalida)}',
+                        style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                      ),
+                    ),
+                  ],
+                ),
+                if (horario.diasSemana.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Días: ${_traducirDiasSemana(horario.diasSemana)}',
+                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _traducirDiasSemana(List<String> dias) {
+    final traduccion = {
+      'Monday': 'Lun',
+      'Tuesday': 'Mar',
+      'Wednesday': 'Mié',
+      'Thursday': 'Jue',
+      'Friday': 'Vie',
+      'Saturday': 'Sáb',
+      'Sunday': 'Dom',
+    };
+    
+    return dias.map((dia) => traduccion[dia] ?? dia).join(', ');
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value, Color color) {

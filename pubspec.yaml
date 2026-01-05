@@ -46,7 +46,7 @@ dependencies:
 
   # Image picker para tomar o seleccionar imágenes
   image_picker: ^1.0.7
-  
+
   # Geolocator para obtener coordenadas GPS
   geolocator: ^10.1.0
   

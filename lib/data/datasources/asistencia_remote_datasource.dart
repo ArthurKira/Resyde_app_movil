@@ -123,9 +123,24 @@ class AsistenciaRemoteDataSourceImpl implements AsistenciaRemoteDataSource {
         String errorMessage = 'Error al marcar entrada';
         try {
           final jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
-          errorMessage = jsonResponse['message'] as String? ??
-              jsonResponse['error'] as String? ??
-              errorMessage;
+          
+          // Debug: imprimir respuesta completa
+          print('DEBUG - Respuesta del servidor: ${response.body}');
+          print('DEBUG - Status code: ${response.statusCode}');
+          
+          // Intentar extraer mensaje de error más detallado
+          if (jsonResponse.containsKey('errors')) {
+            // Laravel validation errors
+            final errors = jsonResponse['errors'] as Map<String, dynamic>;
+            final firstError = errors.values.first;
+            if (firstError is List && firstError.isNotEmpty) {
+              errorMessage = firstError[0] as String;
+            }
+          } else {
+            errorMessage = jsonResponse['message'] as String? ??
+                jsonResponse['error'] as String? ??
+                errorMessage;
+          }
         } catch (e) {
           if (response.body.isNotEmpty) {
             errorMessage = response.body;
@@ -190,9 +205,24 @@ class AsistenciaRemoteDataSourceImpl implements AsistenciaRemoteDataSource {
         String errorMessage = 'Error al marcar salida';
         try {
           final jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
-          errorMessage = jsonResponse['message'] as String? ??
-              jsonResponse['error'] as String? ??
-              errorMessage;
+          
+          // Debug: imprimir respuesta completa
+          print('DEBUG - Respuesta del servidor: ${response.body}');
+          print('DEBUG - Status code: ${response.statusCode}');
+          
+          // Intentar extraer mensaje de error más detallado
+          if (jsonResponse.containsKey('errors')) {
+            // Laravel validation errors
+            final errors = jsonResponse['errors'] as Map<String, dynamic>;
+            final firstError = errors.values.first;
+            if (firstError is List && firstError.isNotEmpty) {
+              errorMessage = firstError[0] as String;
+            }
+          } else {
+            errorMessage = jsonResponse['message'] as String? ??
+                jsonResponse['error'] as String? ??
+                errorMessage;
+          }
         } catch (e) {
           if (response.body.isNotEmpty) {
             errorMessage = response.body;

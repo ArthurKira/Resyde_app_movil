@@ -16,6 +16,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   static const String _keyUserId = 'user_id';
   static const String _keyUserEmail = 'user_email';
   static const String _keyUserName = 'user_name';
+  static const String _keyUserPerfil = 'user_perfil';
 
   @override
   Future<void> saveUser(User user) async {
@@ -31,6 +32,9 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     if (user.name != null) {
       await preferences.setString(_keyUserName, user.name!);
     }
+    if (user.perfil != null) {
+      await preferences.setString(_keyUserPerfil, user.perfil!);
+    }
   }
 
   @override
@@ -43,6 +47,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       email: preferences.getString(_keyUserEmail),
       name: preferences.getString(_keyUserName),
       token: token,
+      perfil: preferences.getString(_keyUserPerfil),
     );
   }
 
@@ -52,6 +57,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     await preferences.remove(_keyUserId);
     await preferences.remove(_keyUserEmail);
     await preferences.remove(_keyUserName);
+    await preferences.remove(_keyUserPerfil);
   }
 }
 

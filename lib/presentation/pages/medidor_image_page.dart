@@ -293,8 +293,8 @@ class _MedidorImagePageState extends State<MedidorImagePage> {
                           ],
                         ],
                       ),
-                    ),
-                  ),
+                      ),
+                ),
                 const SizedBox(height: 24),
 
                 // Área de imagen

@@ -1,4 +1,5 @@
 import 'registro_asistencia.dart';
+import 'horario_turno.dart';
 
 class EstadoAsistencia {
   final bool success;
@@ -12,6 +13,8 @@ class EstadoAsistencia {
   final bool enLicencia;
   final RegistroAsistencia? registro;
   final String? mensaje;
+  final HorarioTurno? horarioRegistro;
+  final HorarioTurno? horarioHoy;
 
   const EstadoAsistencia({
     required this.success,
@@ -25,6 +28,8 @@ class EstadoAsistencia {
     required this.enLicencia,
     this.registro,
     this.mensaje,
+    this.horarioRegistro,
+    this.horarioHoy,
   });
 }
 

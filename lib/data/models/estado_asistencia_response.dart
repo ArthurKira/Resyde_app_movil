@@ -1,5 +1,6 @@
 import '../../domain/entities/estado_asistencia.dart';
 import '../../domain/entities/registro_asistencia.dart';
+import '../../domain/entities/horario_turno.dart';
 
 class EstadoAsistenciaResponse {
   final bool success;
@@ -13,6 +14,8 @@ class EstadoAsistenciaResponse {
   final bool enLicencia;
   final Map<String, dynamic>? registro;
   final String? mensaje;
+  final Map<String, dynamic>? horarioRegistro;
+  final Map<String, dynamic>? horarioHoy;
 
   EstadoAsistenciaResponse({
     required this.success,
@@ -26,6 +29,8 @@ class EstadoAsistenciaResponse {
     required this.enLicencia,
     this.registro,
     this.mensaje,
+    this.horarioRegistro,
+    this.horarioHoy,
   });
 
   factory EstadoAsistenciaResponse.fromJson(Map<String, dynamic> json) {
@@ -41,6 +46,8 @@ class EstadoAsistenciaResponse {
       enLicencia: json['en_licencia'] as bool? ?? false,
       registro: json['registro'] as Map<String, dynamic>?,
       mensaje: json['mensaje'] as String?,
+      horarioRegistro: json['horario_registro'] as Map<String, dynamic>?,
+      horarioHoy: json['horario_hoy'] as Map<String, dynamic>?,
     );
   }
 
@@ -57,6 +64,8 @@ class EstadoAsistenciaResponse {
       enLicencia: enLicencia,
       registro: registro != null ? _parseRegistro(registro!) : null,
       mensaje: mensaje,
+      horarioRegistro: horarioRegistro != null ? _parseHorarioTurno(horarioRegistro!) : null,
+      horarioHoy: horarioHoy != null ? _parseHorarioTurno(horarioHoy!) : null,
     );
   }
 
@@ -74,6 +83,24 @@ class EstadoAsistenciaResponse {
         longitudSalida: json['longitud_salida'] as String?,
         estado: json['estado'] as String? ?? '',
         observaciones: json['observaciones'] as String?,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  HorarioTurno? _parseHorarioTurno(Map<String, dynamic> json) {
+    try {
+      return HorarioTurno(
+        fechaEntrada: json['fecha_entrada'] as String? ?? '',
+        horaEntrada: json['hora_entrada'] as String? ?? '',
+        fechaSalida: json['fecha_salida'] as String? ?? '',
+        horaSalida: json['hora_salida'] as String? ?? '',
+        diasSemana: (json['dias_semana'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ?? [],
+        fechaInicio: json['fecha_inicio'] as String?,
+        fechaFin: json['fecha_fin'] as String?,
       );
     } catch (e) {
       return null;
