@@ -9,11 +9,19 @@ import '../../core/utils/result.dart';
 class MedidorImagePage extends StatefulWidget {
   final int reciboId;
   final String schema;
+  final String? departamentoNumero;
+  final String? residenteNombre;
+  final String? mes;
+  final String? year;
 
   const MedidorImagePage({
     super.key,
     required this.reciboId,
     required this.schema,
+    this.departamentoNumero,
+    this.residenteNombre,
+    this.mes,
+    this.year,
   });
 
   @override
@@ -205,6 +213,88 @@ class _MedidorImagePageState extends State<MedidorImagePage> {
                         color: Colors.grey[600],
                       ),
                 ),
+                const SizedBox(height: 16),
+                
+                // Card informativo con datos del recibo
+                if (widget.departamentoNumero != null || 
+                    widget.residenteNombre != null || 
+                    widget.mes != null || 
+                    widget.year != null)
+                  Card(
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (widget.departamentoNumero != null) ...[
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.home,
+                                  size: 20,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Departamento: ${widget.departamentoNumero}',
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (widget.residenteNombre != null && widget.departamentoNumero != null)
+                            const SizedBox(height: 8),
+                          if (widget.residenteNombre != null) ...[
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  size: 20,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    widget.residenteNombre!,
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: Colors.grey[700],
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if ((widget.mes != null || widget.year != null) && 
+                              (widget.departamentoNumero != null || widget.residenteNombre != null))
+                            const SizedBox(height: 8),
+                          if (widget.mes != null || widget.year != null) ...[
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 20,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${widget.mes ?? ''} ${widget.year ?? ''}'.trim(),
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: Colors.grey[700],
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 24),
 
                 // Área de imagen

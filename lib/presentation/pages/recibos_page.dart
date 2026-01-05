@@ -303,6 +303,10 @@ class _ReciboCard extends StatelessWidget {
                       builder: (context) => MedidorImagePage(
                         reciboId: recibo.id,
                         schema: schema,
+                        departamentoNumero: recibo.departamento?.houseNumero,
+                        residenteNombre: recibo.residente?.nombre,
+                        mes: recibo.month,
+                        year: recibo.year,
                       ),
                     ),
                   ).then((updated) {

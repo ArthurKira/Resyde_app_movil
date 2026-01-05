@@ -121,6 +121,20 @@ class RecibosProvider with ChangeNotifier {
       } else {
         _recibos = newRecibos;
       }
+      
+      // Ordenar: recibos sin imagen de medidor primero
+      _recibos.sort((a, b) {
+        final aSinImagen = a.medidorImage == null || a.medidorImage!.isEmpty;
+        final bSinImagen = b.medidorImage == null || b.medidorImage!.isEmpty;
+        
+        // Si a no tiene imagen y b sí tiene, a va primero
+        if (aSinImagen && !bSinImagen) return -1;
+        // Si a tiene imagen y b no tiene, b va primero
+        if (!aSinImagen && bSinImagen) return 1;
+        // Si ambos están en el mismo grupo (ambos tienen o ambos no tienen), mantener orden original
+        return 0;
+      });
+      
       _error = null;
       
       // Si recibimos menos de 15 elementos, no hay más páginas
