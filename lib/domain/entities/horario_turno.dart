@@ -1,3 +1,6 @@
+import 'personal_residencia.dart';
+import 'residencia_info.dart';
+
 class HorarioTurno {
   final String fechaEntrada;
   final String horaEntrada;
@@ -6,6 +9,8 @@ class HorarioTurno {
   final List<String> diasSemana;
   final String? fechaInicio;
   final String? fechaFin;
+  final PersonalResidencia? personalResidencia;
+  final ResidenciaInfo? residencia;
 
   const HorarioTurno({
     required this.fechaEntrada,
@@ -15,6 +20,8 @@ class HorarioTurno {
     required this.diasSemana,
     this.fechaInicio,
     this.fechaFin,
+    this.personalResidencia,
+    this.residencia,
   });
 
   // Helper para verificar si es un turno nocturno

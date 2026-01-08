@@ -483,6 +483,46 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
                       ),
                     ],
                   ),
+                  // Mostrar cargo si existe
+                  if (horarioRegistro.personalResidencia != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.badge, size: 14, color: Colors.blue[600]),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Cargo: ${horarioRegistro.personalResidencia!.cargo}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  // Mostrar residencia si existe
+                  if (horarioRegistro.residencia != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.location_city, size: 14, color: Colors.purple[600]),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Residencia: ${horarioRegistro.residencia!.nombre}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -721,6 +761,46 @@ class _AsistenciaPageState extends State<AsistenciaPage> {
                         child: Text(
                           'Días: ${_traducirDiasSemana(horario.diasSemana)}',
                           style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                // Mostrar cargo si existe
+                if (horario.personalResidencia != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.badge, size: 16, color: Colors.blue[600]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Cargo: ${horario.personalResidencia!.cargo}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[800],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                // Mostrar residencia si existe
+                if (horario.residencia != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.location_city, size: 16, color: Colors.purple[600]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Residencia: ${horario.residencia!.nombre}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[800],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],

@@ -23,4 +23,3 @@ class Residencia {
     required this.usersCount,
   });
 }
-

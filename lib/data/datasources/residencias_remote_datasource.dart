@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../core/constants/api_constants.dart';
-import '../../core/errors/failures.dart';
 import '../models/residencias_response.dart';
 
 abstract class ResidenciasRemoteDataSource {

@@ -1,6 +1,8 @@
 import '../../domain/entities/estado_asistencia.dart';
 import '../../domain/entities/registro_asistencia.dart';
 import '../../domain/entities/horario_turno.dart';
+import '../../domain/entities/personal_residencia.dart';
+import '../../domain/entities/residencia_info.dart';
 
 class EstadoAsistenciaResponse {
   final bool success;
@@ -91,6 +93,26 @@ class EstadoAsistenciaResponse {
 
   HorarioTurno? _parseHorarioTurno(Map<String, dynamic> json) {
     try {
+      // Parsear personal_residencia si existe
+      PersonalResidencia? personalResidencia;
+      if (json['personal_residencia'] != null) {
+        final prJson = json['personal_residencia'] as Map<String, dynamic>;
+        personalResidencia = PersonalResidencia(
+          id: prJson['id'] as int? ?? 0,
+          cargo: prJson['cargo'] as String? ?? '',
+        );
+      }
+
+      // Parsear residencia si existe
+      ResidenciaInfo? residencia;
+      if (json['residencia'] != null) {
+        final resJson = json['residencia'] as Map<String, dynamic>;
+        residencia = ResidenciaInfo(
+          idResidencia: resJson['id_residencia'] as int? ?? 0,
+          nombre: resJson['nombre'] as String? ?? '',
+        );
+      }
+
       return HorarioTurno(
         fechaEntrada: json['fecha_entrada'] as String? ?? '',
         horaEntrada: json['hora_entrada'] as String? ?? '',
@@ -101,6 +123,8 @@ class EstadoAsistenciaResponse {
             .toList() ?? [],
         fechaInicio: json['fecha_inicio'] as String?,
         fechaFin: json['fecha_fin'] as String?,
+        personalResidencia: personalResidencia,
+        residencia: residencia,
       );
     } catch (e) {
       return null;
