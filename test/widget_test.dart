@@ -34,7 +34,10 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
         value: authProvider,
-        child: MyApp(authProvider: authProvider),
+        child: MyApp(
+          authProvider: authProvider,
+          authLocalDataSource: authLocalDataSource,
+        ),
       ),
     );
 

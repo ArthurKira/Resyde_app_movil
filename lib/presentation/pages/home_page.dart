@@ -109,6 +109,8 @@ class HomePage extends StatelessWidget {
             onSelected: (value) {
               if (value == 'logout') {
                 _handleLogout(context);
+              } else if (value == 'profile') {
+                Navigator.pushNamed(context, '/profile');
               }
             },
             itemBuilder: (BuildContext context) => [

@@ -8,6 +8,7 @@ import 'data/datasources/residentes_remote_datasource.dart';
 import 'data/datasources/departamentos_remote_datasource.dart';
 import 'data/datasources/medidor_remote_datasource.dart';
 import 'data/datasources/asistencia_remote_datasource.dart';
+import 'data/datasources/profile_remote_datasource.dart';
 import 'data/repositories/auth_repository_impl.dart';
 import 'data/repositories/residencias_repository_impl.dart';
 import 'data/repositories/recibos_repository_impl.dart';
@@ -15,6 +16,7 @@ import 'data/repositories/residentes_repository_impl.dart';
 import 'data/repositories/departamentos_repository_impl.dart';
 import 'data/repositories/medidor_repository_impl.dart';
 import 'data/repositories/asistencia_repository_impl.dart';
+import 'data/repositories/profile_repository_impl.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'domain/repositories/residencias_repository.dart';
 import 'domain/repositories/recibos_repository.dart';
@@ -22,6 +24,7 @@ import 'domain/repositories/residentes_repository.dart';
 import 'domain/repositories/departamentos_repository.dart';
 import 'domain/repositories/medidor_repository.dart';
 import 'domain/repositories/asistencia_repository.dart';
+import 'domain/repositories/profile_repository.dart';
 import 'domain/usecases/login_usecase.dart';
 import 'domain/usecases/get_residencias_usecase.dart';
 import 'domain/usecases/get_recibos_usecase.dart';
@@ -32,13 +35,16 @@ import 'domain/usecases/get_estado_asistencia_usecase.dart';
 import 'domain/usecases/marcar_entrada_usecase.dart';
 import 'domain/usecases/marcar_salida_usecase.dart';
 import 'domain/usecases/get_historial_asistencia_usecase.dart';
+import 'domain/usecases/get_user_profile.dart';
 import 'presentation/pages/login_page.dart';
 import 'presentation/pages/home_page.dart';
+import 'presentation/pages/profile_page.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/residencias_provider.dart';
 import 'presentation/providers/recibos_provider.dart';
 import 'presentation/providers/medidor_provider.dart';
 import 'presentation/providers/asistencia_provider.dart';
+import 'presentation/providers/profile_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -58,15 +64,20 @@ void main() async {
   // Verificar si hay sesión activa
   await authProvider.checkSession();
 
-  runApp(MyApp(authProvider: authProvider));
+  runApp(MyApp(
+    authProvider: authProvider,
+    authLocalDataSource: authLocalDataSource,
+  ));
 }
 
 class MyApp extends StatelessWidget {
   final AuthProvider authProvider;
+  final AuthLocalDataSource authLocalDataSource;
 
   const MyApp({
     super.key,
     required this.authProvider,
+    required this.authLocalDataSource,
   });
 
   @override
@@ -130,6 +141,15 @@ class MyApp extends StatelessWidget {
       getHistorialAsistenciaUseCase,
     );
 
+    // Inicializar dependencias de perfil
+    final profileRemoteDataSource = ProfileRemoteDataSource();
+    final ProfileRepository profileRepository = ProfileRepositoryImpl(
+      remoteDataSource: profileRemoteDataSource,
+      localDataSource: authLocalDataSource,
+    );
+    final getUserProfile = GetUserProfile(profileRepository);
+    final profileProvider = ProfileProvider(getUserProfile: getUserProfile);
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: authProvider),
@@ -137,6 +157,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider.value(value: recibosProvider),
         ChangeNotifierProvider.value(value: medidorProvider),
         ChangeNotifierProvider.value(value: asistenciaProvider),
+        ChangeNotifierProvider.value(value: profileProvider),
       ],
       child: MaterialApp(
         title: 'Resyde',
@@ -160,6 +181,11 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
+        routes: {
+          '/login': (context) => const LoginPage(),
+          '/home': (context) => const HomePage(),
+          '/profile': (context) => const ProfilePage(),
+        },
         home: _getInitialRoute(authProvider),
       ),
     );
